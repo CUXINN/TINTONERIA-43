@@ -611,22 +611,23 @@
 <h2 class="font-headline-lg text-headline-lg text-primary">Cuéntanos qué prenda quieres cuidar</h2>
 <p class="font-body-md text-body-md text-secondary">Te responderemos a la mayor brevedad para resolver tus dudas o reservar cita.</p>
 </div>
-<form class="flex flex-col gap-space-md" onsubmit="event.preventDefault(); alert('¡Gracias por contactar con Tintorería Autonomía 43! Le responderemos a la mayor brevedad.');">
+<form class="flex flex-col gap-space-md" id="formContacto">
+<input autocomplete="off" name="_honey" style="display:none" tabindex="-1" type="text"/>
 <!-- Full Name -->
 <div class="flex flex-col gap-1.5">
 <label class="font-label-lg text-label-lg text-on-surface" for="nombre">Nombre completo</label>
-<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="nombre" placeholder="Ej. Begoña Gómez" required="" type="text"/>
+<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="nombre" name="nombre" placeholder="Ej. Begoña Gómez" required="" type="text"/>
 </div>
 <!-- Phone -->
 <div class="flex flex-col gap-1.5">
 <label class="font-label-lg text-label-lg text-on-surface" for="telefono">Teléfono de contacto</label>
-<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="telefono" placeholder="Ej. 600 000 000" required="" type="tel"/>
+<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="telefono" name="telefono" placeholder="Ej. 600 000 000" required="" type="tel"/>
 </div>
 <!-- Prenda Select Dropdown -->
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
 <div class="flex flex-col gap-1.5">
 <label class="font-label-lg text-label-lg text-on-surface" for="tipo_prenda">Tipo de prenda</label>
-<select class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="tipo_prenda" required="">
+<select class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="tipo_prenda" name="tipo_prenda" required="">
 <option disabled="" selected="" value="">Selecciona una opción</option>
 <option value="faldon">Faldón de bautizo</option>
 <option value="comunion">Vestido de comunión</option>
@@ -639,13 +640,13 @@
 <!-- Event Date -->
 <div class="flex flex-col gap-1.5">
 <label class="font-label-lg text-label-lg text-on-surface" for="fecha_evento">Fecha del evento <span class="font-normal text-on-surface-variant">(opcional)</span></label>
-<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="fecha_evento" type="date"/>
+<input class="w-full h-12 px-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="fecha_evento" name="fecha_evento" type="date"/>
 </div>
 </div>
 <!-- Message -->
 <div class="flex flex-col gap-1.5">
 <label class="font-label-lg text-label-lg text-on-surface" for="mensaje">Mensaje</label>
-<textarea class="w-full p-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="mensaje" placeholder="Describe brevemente el estado de la prenda o tus necesidades de almidonado/encañonado..." rows="4"></textarea>
+<textarea class="w-full p-4 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-gold-accent" id="mensaje" name="mensaje" placeholder="Describe brevemente el estado de la prenda o tus necesidades de almidonado/encañonado..." rows="4"></textarea>
 </div>
 <!-- Privacy Policy Checkbox -->
 <div class="flex items-start gap-3 pt-space-xs">
@@ -661,6 +662,7 @@
 <span>Enviar consulta</span>
 </button>
 </div>
+<p aria-live="polite" class="font-body-sm text-body-sm text-on-surface-variant hidden" id="formEstado" role="status"></p>
 </form>
 </div>
 <!-- Right: Contact Information Box -->
@@ -785,6 +787,56 @@
 </div>
 </section>
 </div>
+<script>
+  // ===== Formulario de contacto (FormSubmit) =====
+  // Cambia aquí el correo que recibirá las consultas.
+  const EMAIL_DESTINO = 'oiercousillas@gmail.com'; // PRUEBAS: cambiar por info@tintoreriaautonomia43.com cuando se entregue la web
+  const formContacto = document.getElementById('formContacto');
+  if (formContacto) {
+    const estado = document.getElementById('formEstado');
+    const boton = formContacto.querySelector('button[type="submit"]');
+    const textoBoton = boton.querySelector('span:last-child');
+    const mostrar = (msg, ok) => {
+      estado.textContent = msg;
+      estado.classList.remove('hidden', 'text-red-700', 'text-primary');
+      estado.classList.add(ok ? 'text-primary' : 'text-red-700');
+    };
+    formContacto.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (formContacto.elements['_honey'].value) return; // spam: se ignora en silencio
+      const f = formContacto.elements;
+      const datos = {
+        'Nombre': f['nombre'].value.trim(),
+        'Teléfono': f['telefono'].value.trim(),
+        'Tipo de prenda': f['tipo_prenda'].selectedOptions[0].textContent,
+        'Fecha del evento': f['fecha_evento'].value || 'No indicada',
+        'Mensaje': f['mensaje'].value.trim() || 'Sin mensaje',
+        '_subject': 'Nueva consulta desde la web de Tintorería Autonomía 43',
+        '_captcha': 'false',
+        '_template': 'table'
+      };
+      boton.disabled = true;
+      const original = textoBoton.textContent;
+      textoBoton.textContent = 'Enviando…';
+      try {
+        const res = await fetch('https://formsubmit.co/ajax/' + EMAIL_DESTINO, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(datos)
+        });
+        const resp = await res.json().catch(() => ({}));
+        if (!res.ok || resp.success === 'false' || resp.success === false) throw new Error('envio');
+        formContacto.reset();
+        mostrar('¡Gracias! Hemos recibido tu consulta y te responderemos a la mayor brevedad.', true);
+      } catch (err) {
+        mostrar('No hemos podido enviar tu consulta. Llámanos al 944 211 558 o escríbenos a info@tintoreriaautonomia43.com.', false);
+      } finally {
+        boton.disabled = false;
+        textoBoton.textContent = original;
+      }
+    });
+  }
+</script>
 <script>
   // Simple Vanilla JS for Before/After Slider
   const sliderInput = document.getElementById('sliderInput');
