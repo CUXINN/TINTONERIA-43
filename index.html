@@ -815,6 +815,7 @@
         '_captcha': 'false',
         '_template': 'table'
       };
+      let detalle = '';
       boton.disabled = true;
       const original = textoBoton.textContent;
       textoBoton.textContent = 'Enviando…';
@@ -825,11 +826,13 @@
           body: JSON.stringify(datos)
         });
         const resp = await res.json().catch(() => ({}));
+        detalle = resp.message || ('HTTP ' + res.status);
         if (!res.ok || resp.success === 'false' || resp.success === false) throw new Error('envio');
         formContacto.reset();
         mostrar('¡Gracias! Hemos recibido tu consulta y te responderemos a la mayor brevedad.', true);
       } catch (err) {
-        mostrar('No hemos podido enviar tu consulta. Llámanos al 944 211 558 o escríbenos a info@tintoreriaautonomia43.com.', false);
+        const extra = location.search.includes('debug') ? ' [' + (detalle || err.message) + ']' : '';
+        mostrar('No hemos podido enviar tu consulta. Llámanos al 944 211 558 o escríbenos a info@tintoreriaautonomia43.com.' + extra, false);
       } finally {
         boton.disabled = false;
         textoBoton.textContent = original;
